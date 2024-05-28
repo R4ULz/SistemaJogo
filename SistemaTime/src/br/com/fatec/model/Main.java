@@ -1,7 +1,9 @@
 package br.com.fatec.model;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
@@ -207,10 +209,108 @@ public class Main {
 	}
 
 	private static void relacionarJogadores() {
-		// Implementar lógica para relacionar jogadores
+		if (timeMandante == null && timeVisitante == null) {
+			System.out.println("Nenhum time foi cadastrado ainda.");
+			return;
+		}
+
+		System.out.println("Deseja exibir no console ou gravar em arquivo? (digite 'console' ou 'arquivo')");
+		String escolha = scanner.nextLine().trim().toLowerCase();
+
+		if ("console".equals(escolha)) {
+			if (timeMandante != null) {
+				System.out.println("Titulares do Time 1:");
+				exibirJogadores(timeMandante.getTitulares());
+				System.out.println("Reservas do Time 1:");
+				exibirJogadores(timeMandante.getReservas());
+			}
+			if (timeVisitante != null) {
+				System.out.println("Titulares do Time 2:");
+				exibirJogadores(timeVisitante.getTitulares());
+				System.out.println("Reservas do Time 2:");
+				exibirJogadores(timeVisitante.getReservas());
+			}
+		} else if ("arquivo".equals(escolha)) {
+			System.out.println("Digite o nome do arquivo para salvar (incluindo o caminho se necessário):");
+			String nomeArquivo = scanner.nextLine().trim();
+			try {
+				gravarJogadoresEmArquivo(timeMandante, timeVisitante, nomeArquivo);
+				System.out.println("Jogadores gravados com sucesso em '" + nomeArquivo + "'");
+			} catch (IOException e) {
+				System.out.println("Erro ao gravar arquivo: " + e.getMessage());
+			}
+		} else {
+			System.out.println("Opção inválida.");
+		}
+	}
+
+	private static void exibirJogadores(ArrayList<Jogador> jogadores) {
+		if (jogadores.isEmpty()) {
+			System.out.println("Nenhum jogador cadastrado ou relacionado.");
+		} else {
+			for (Jogador jogador : jogadores) {
+				System.out.println(jogador.toString());
+			}
+		}
+	}
+
+	private static void gravarJogadoresEmArquivo(Time timeMandante, Time timeVisitante, String nomeArquivo) throws IOException {
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(nomeArquivo))) {
+			if (timeMandante != null) {
+				writer.write("Titulares do Time Mandante:\n");
+				for (Jogador jogador : timeMandante.getTitulares()) {
+					writer.write(jogador.toString() + "\n");
+				}
+				writer.write("Reservas do Time Mandante:\n");
+				for (Jogador jogador : timeMandante.getReservas()) {
+					writer.write(jogador.toString() + "\n");
+				}
+			}
+			if (timeVisitante != null) {
+				writer.write("Titulares do Time Visitante:\n");
+				for (Jogador jogador : timeVisitante.getTitulares()) {
+					writer.write(jogador.toString() + "\n");
+				}
+				writer.write("Reservas do Time Visitante:\n");
+				for (Jogador jogador : timeVisitante.getReservas()) {
+					writer.write(jogador.toString() + "\n");
+				}
+			}
+		}
 	}
 
 	private static void lerTimesEGerarResultado() {
-		// Implementar lógica para ler times do arquivo e gerar resultado de um jogo
-	}
+        System.out.println("Digite o nome do arquivo para ler os times (incluindo o caminho se necessário):");
+        String nomeArquivo = scanner.nextLine().trim();
+
+        Time time1 = new Time();
+        Time time2 = new Time();
+
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(nomeArquivo));
+            String line;
+            Time currentTime = null;
+
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("Time 1:")) {
+                    currentTime = time1;
+                } else if (line.startsWith("Time 2:")) {
+                    currentTime = time2;
+                } else if (line.trim().isEmpty()) {
+                    continue;
+                } else {
+                    String[] dados = line.split(",");
+                    Jogador jogador = new Jogador(Integer.parseInt(dados[0].trim()), dados[1].trim(), dados[2].trim(), dados[3].trim(), Integer.parseInt(dados[4].trim()), dados[5].trim());
+                    currentTime.adicionarJogador(jogador);
+                }
+            }
+            reader.close();
+
+            Jogo jogo = new Jogo(timeMandante, timeVisitante,"27/02/2023","Maracanã", "Rio de Janeiro");
+            jogo.gerarResultado();
+
+        } catch (IOException e) {
+            System.out.println("Erro ao ler o arquivo: " + e.getMessage());
+        }
+    }
 }
